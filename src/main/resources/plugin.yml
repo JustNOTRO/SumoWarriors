@@ -1,0 +1,10 @@
+name: SumoWarriors
+version: '${version}'
+main: me.notro.sumowarriors.SumoWarriors
+api-version: '1.20'
+authors: [Notro]
+description: A Sumo mini-game for Minecraft servers.
+
+commands:
+  setlocation:
+    description: Sets two locations for the game.
