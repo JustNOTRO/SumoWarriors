@@ -3,11 +3,13 @@ package me.notro.sumowarriors.utils;
 import lombok.NonNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 public class ChatUtils {
+
     public static final Component
-            NO_SENDER_EXECUTOR = fixColor("&cOnly player can execute this command&7."),
+            NO_SENDER_EXECUTOR = fixColor("&cOnly players can execute this command&7."),
             NO_PERMISSION = fixColor("&cYou don't have permission to execute this command&7."),
             NO_PLAYER_EXISTENCE = fixColor("&cPlayer does not exist/online&7.");
 

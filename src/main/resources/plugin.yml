@@ -6,5 +6,22 @@ authors: [Notro]
 description: A Sumo mini-game for Minecraft servers.
 
 commands:
-  setlocation:
-    description: Sets two locations for the game.
+  arena:
+    description: Manage arenas.
+
+  coins:
+    description: Displays current player's coins.
+
+  duel:
+    aliases: request
+    description: invite/accept/deny a player's duel.
+
+  lobby:
+    aliases: spawn
+    description: Teleports a player back to lobby.
+
+  config:
+    description: Reload project config.
+
+  setlobby:
+    description: Sets lobby location.

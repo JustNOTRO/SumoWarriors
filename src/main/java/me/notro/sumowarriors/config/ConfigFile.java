@@ -1,6 +1,8 @@
-package me.notro.sumowarriors;
+package me.notro.sumowarriors.config;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
+import me.notro.sumowarriors.SumoWarriors;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -10,23 +12,23 @@ import java.io.IOException;
 
 public class ConfigFile {
 
-    private final @NonNull File file;
-    private final @NonNull FileConfiguration configuration;
+    private final File
+            file;
+    private final FileConfiguration
+            configuration;
 
+    @SneakyThrows({InvalidConfigurationException.class, IOException.class})
     public ConfigFile(@NonNull SumoWarriors plugin, @NonNull String name) {
         this.file = new File(plugin.getDataFolder(),name + ".yml");
         this.configuration = new YamlConfiguration();
 
-        if (!file.exists()) {
+        if (!file.exists() && !file.getParentFile().mkdirs()) {
+            file.createNewFile();
             file.getParentFile().mkdirs();
             plugin.saveResource(name + ".yml", false);
         }
 
-        try {
-            configuration.load(file);
-        } catch (InvalidConfigurationException | IOException exception) {
-            throw new RuntimeException("Could not load config");
-        }
+        configuration.load(file);
     }
 
     public FileConfiguration getConfig() {
@@ -37,17 +39,16 @@ public class ConfigFile {
         YamlConfiguration.loadConfiguration(file);
     }
 
+    @SneakyThrows(IOException.class)
     public void saveConfig() {
-        try {
-            configuration.save(file);
-        } catch (IOException exception) {
-            throw new RuntimeException("Could not save config");
-        }
+        configuration.save(file);
+    }
+
+    public void copyConfig() {
+        configuration.options().copyDefaults(true);
     }
 
     public String getPath(@NonNull String path) {
-        if (!configuration.isSet(path)) return "Could not find " + path;
-
-        return path;
+        return !configuration.isSet(path) ? "Could not find '" + path + "'" : path;
     }
 }
