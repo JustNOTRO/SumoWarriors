@@ -3,7 +3,6 @@ package me.notro.sumowarriors.config;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import me.notro.sumowarriors.SumoWarriors;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -17,38 +16,39 @@ public class ConfigFile {
     private final FileConfiguration
             configuration;
 
-    @SneakyThrows({InvalidConfigurationException.class, IOException.class})
+    @SneakyThrows(IOException.class)
     public ConfigFile(@NonNull SumoWarriors plugin, @NonNull String name) {
         this.file = new File(plugin.getDataFolder(),name + ".yml");
         this.configuration = new YamlConfiguration();
 
-        if (!file.exists() && !file.getParentFile().mkdirs()) {
-            file.createNewFile();
-            file.getParentFile().mkdirs();
+        if (!this.file.exists() && !this.file.getParentFile().exists()) {
+            this.file.createNewFile();
             plugin.saveResource(name + ".yml", false);
         }
 
-        configuration.load(file);
+        YamlConfiguration.loadConfiguration(this.file);
+        reloadConfig();
     }
 
     public FileConfiguration getConfig() {
-        return configuration;
+        return this.configuration;
     }
 
+    @SneakyThrows
     public void reloadConfig() {
-        YamlConfiguration.loadConfiguration(file);
+        this.configuration.load(file);
     }
 
     @SneakyThrows(IOException.class)
     public void saveConfig() {
-        configuration.save(file);
+        this.configuration.save(this.file);
     }
 
     public void copyConfig() {
-        configuration.options().copyDefaults(true);
+        this.configuration.options().copyDefaults(true);
     }
 
     public String getPath(@NonNull String path) {
-        return !configuration.isSet(path) ? "Could not find '" + path + "'" : path;
+        return !this.configuration.isSet(path) ? "Could not find '" + path + "'" : path;
     }
 }

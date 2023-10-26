@@ -10,7 +10,8 @@ import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 @RequiredArgsConstructor
 public class PlayerSpawnLocationListener implements Listener {
 
-    private final SumoWarriors plugin;
+    private final SumoWarriors
+            plugin;
 
     @EventHandler
     public void onPlayerSpawn(PlayerSpawnLocationEvent event) {

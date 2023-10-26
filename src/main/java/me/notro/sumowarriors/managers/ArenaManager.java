@@ -6,9 +6,7 @@ import lombok.SneakyThrows;
 import me.notro.sumowarriors.SumoWarriors;
 import me.notro.sumowarriors.models.Arena;
 import me.notro.sumowarriors.utils.ChatUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.WorldCreator;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -37,10 +35,11 @@ public class ArenaManager {
     public void addArena(@NonNull String name) {
         Arena arena = new Arena(plugin, name);
         File sourceFile = Objects.requireNonNull(Bukkit.getWorld("world")).getWorldFolder();
-        File destinationFile = new File(Bukkit.getWorldContainer(), name);
+        File destinationFile = new File(name);
 
-        arenas.add(arena);
+        this.arenas.add(arena);
         copyWorld(sourceFile, destinationFile);
+        Bukkit.createWorld(new WorldCreator(name).type(WorldType.FLAT));
 
         plugin.getSumoFile()
                 .getConfig()
@@ -77,13 +76,22 @@ public class ArenaManager {
                 );
 
         plugin.getSumoFile().saveConfig();
-        unloadWorld(name);
     }
 
     public void removeArena(@NonNull Arena arena) {
-        arenas.remove(arena);
-        deleteWorld(arena.getName());
-        unloadWorld(arena.getName());
+        this.arenas.remove(arena);
+
+        plugin.getSumoFile()
+                .getConfig()
+                .set("arenas." + this.arenaName, null);
+
+        plugin.getSumoFile().saveConfig();
+
+        World world = Bukkit.getWorld(this.arenaName);
+        File worldFolder = Objects.requireNonNull(Bukkit.getWorld(this.arenaName)).getWorldFolder();
+
+        deleteWorld(worldFolder);
+        unloadWorld(world);
     }
 
     public int getArenasCount() {
@@ -91,24 +99,29 @@ public class ArenaManager {
     }
 
     public void loadArenas() {
-        ConfigurationSection section = plugin.getSumoFile().getConfig().getConfigurationSection("arenas");
+        ConfigurationSection section = plugin.getSumoFile()
+                .getConfig()
+                .getConfigurationSection("arenas");
 
         if (section == null || !section.isConfigurationSection("arenas")) {
-            plugin.getSumoFile().getConfig().createSection("arenas");
-            return;
-        }
+            plugin.getSumoFile()
+                    .getConfig()
+                    .createSection("arenas");
+        } else {
+            for (String key : section.getKeys(false)) {
+                ConfigurationSection arenaSection = plugin.getSumoFile()
+                        .getConfig()
+                        .getConfigurationSection("arenas." + key);
+                if (arenaSection == null) continue;
 
-        for (String key : section.getKeys(false)) {
-            ConfigurationSection arenaSection = plugin.getSumoFile().getConfig().getConfigurationSection("arenas." + key);
-            if (arenaSection == null) continue;
-
-            Arena arena = new Arena(plugin, key);
-            arenas.add(arena);
+                Arena arena = new Arena(plugin, key);
+                arenas.add(arena);
+            }
         }
     }
 
-    public void setArenaLocation(@NonNull Player player, @NonNull String name, @NonNull String locationName) {
-        Arena arena = getArena(name);
+    public void setArenaLocation(@NonNull Player player, @NonNull String arenaName, @NonNull String locationName) {
+        Arena arena = getArena(arenaName);
         if (arena == null || !plugin.getArenaManager().exists(arena)) {
             ChatUtils.sendPrefixedMessage(player, "&cArena does not exist&7.");
             return;
@@ -118,18 +131,20 @@ public class ArenaManager {
             case "1" -> {
                 plugin.getSumoFile()
                         .getConfig()
-                        .set("arenas." + name + ".location.1", player.getLocation());
+                        .set("arenas." + arenaName + ".location.1", player.getLocation());
 
-                plugin.getSumoFile().saveConfig();
+                plugin.getSumoFile()
+                        .saveConfig();
                 ChatUtils.sendPrefixedMessage(player, "&eFirst location has been set&7.");
             }
 
             case "2" -> {
                 plugin.getSumoFile()
                         .getConfig()
-                        .set("arenas." + name + ".location.2", plugin.getSumoFile().getConfig().getLocation(""));
+                        .set("arenas." + arenaName + ".location.2", plugin.getSumoFile().getConfig().getLocation(""));
 
-                plugin.getSumoFile().saveConfig();
+                plugin.getSumoFile()
+                        .saveConfig();
                 ChatUtils.sendPrefixedMessage(player, "&eSecond location has been set&7.");
             }
 
@@ -138,28 +153,40 @@ public class ArenaManager {
     }
 
     public boolean exists(@NonNull Arena arena) {
-        return arenas.contains(arena);
+        return this.arenas.contains(arena);
     }
 
     @Nullable
     public Arena getArena(@NonNull String name) {
-        for (Arena arena : arenas) {
+        for (Arena arena : this.arenas) {
             if (arena.getName().equalsIgnoreCase(name))
                 return arena;
         }
         return null;
     }
 
+    @Nullable
     public Location getFirstLocation(@NonNull String name) {
         return plugin.getSumoFile()
                 .getConfig()
                 .getLocation("arenas." + name + ".location.1");
     }
 
+    @Nullable
     public Location getSecondLocation(@NonNull String name) {
         return plugin.getSumoFile()
                 .getConfig()
                 .getLocation("arenas." + name + ".location.2");
+    }
+
+    public void displayArenas(@NonNull Player player) {
+        if (arenas.isEmpty()) {
+            ChatUtils.sendPrefixedMessage(player, "&cThere's currently no arenas&7.");
+            return;
+        }
+
+        ChatUtils.sendPrefixedMessage(player, "&7Existing arenas: ");
+        for (Arena arena : arenas) ChatUtils.sendPrefixedMessage(player, "&e" + arena.getName());
     }
 
     @SneakyThrows(IOException.class)
@@ -184,7 +211,7 @@ public class ArenaManager {
 
             InputStream inputStream = new FileInputStream(source);
             OutputStream outputStream = new FileOutputStream(target);
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[8192];
 
             int length;
             while ((length = inputStream.read(buffer)) > 0)
@@ -195,30 +222,27 @@ public class ArenaManager {
         }
     }
 
-    private boolean deleteWorld(@NonNull String name) {
-        File destinationFile = Objects.requireNonNull(Bukkit.getWorld(name)).getWorldFolder();
-        if (!destinationFile.exists()) return false;
+    private void deleteWorld(@Nullable File destinationFile) {
+        if (destinationFile == null)
+            return;
 
         File[] files = destinationFile.listFiles();
-        if (files == null) return false;
-
-        for (File file : files)
-            return file.isDirectory() ? deleteWorld(file.getName()) : file.delete();
-
-        return destinationFile.delete();
-    }
-
-    private void unloadWorld(@NonNull String name) {
-        Bukkit.unloadWorld(name, true);
-    }
-
-    public void displayArenas(@NonNull Player player) {
-        if (arenas.isEmpty()) {
-            ChatUtils.sendPrefixedMessage(player, "&cThere's currently no arenas&7.");
+        if (files == null)
             return;
-        }
 
-        ChatUtils.sendPrefixedMessage(player, "&7Existing arenas: ");
-        for (Arena arena : arenas) ChatUtils.sendPrefixedMessage(player, "&e" + arena.getName());
+        for (File file : files) {
+            if (file.isDirectory())
+                deleteWorld(file);
+            else
+                file.delete();
+        }
+        destinationFile.delete();
+    }
+
+    private void unloadWorld(@Nullable World world) {
+        if (world == null)
+            return;
+
+        Bukkit.unloadWorld(world, true);
     }
 }

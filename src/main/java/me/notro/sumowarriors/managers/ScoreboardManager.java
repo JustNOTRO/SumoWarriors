@@ -36,7 +36,8 @@ public class ScoreboardManager {
     }
 
     public void registerScore(@NonNull Scoreboard scoreboard, @NonNull String objectiveName, @NonNull Component scoreName, int scoreNumber) {
-        String displayName = LegacyComponentSerializer.legacySection()
+        String displayName = LegacyComponentSerializer
+                .legacySection()
                 .serialize(scoreName);
 
         Objects.requireNonNull(scoreboard.getObjective(objectiveName))
@@ -44,27 +45,11 @@ public class ScoreboardManager {
                 .setScore(scoreNumber);
     }
 
-    /*
-    scoreboard
-        enabled
-        title
-        lines
-            line9
-            line8
-            line7
-            line6
-            line5
-            line4
-            line3
-            line2
-            line1
-            line0
-     */
-
     public void generateScoreboard(@NonNull Scoreboard scoreboard, @NonNull Player player, @NonNull String title, boolean state) {
         if (!state || notExist()) return;
 
-        registerObjective(scoreboard,
+        registerObjective(
+                scoreboard,
                 "Main",
                 Criteria.DUMMY,
                 Component.text(title).color(NamedTextColor.GOLD));
@@ -77,18 +62,21 @@ public class ScoreboardManager {
 
         for (String line : lines) {
             if (plugin.getStringReplacer().containsKey(line)) {
-                registerScore(scoreboard,
+                registerScore(
+                        scoreboard,
                         "Main",
-                        ChatUtils.fixColor(plugin.getStringReplacer()
-                                .getValue(player, line)),
+                        ChatUtils.fixColor(
+                                plugin.getStringReplacer().getValue(player, line)
+                        ),
                         numberOfLine
                 );
             } else
-                registerScore(scoreboard,
+                registerScore(
+                        scoreboard,
                         "Main",
                         ChatUtils.fixColor(line),
-                        numberOfLine);
-
+                        numberOfLine
+                );
             numberOfLine--;
         }
 

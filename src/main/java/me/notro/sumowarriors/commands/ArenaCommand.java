@@ -1,60 +1,60 @@
 package me.notro.sumowarriors.commands;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import me.notro.sumowarriors.SumoWarriors;
+import me.notro.sumowarriors.structs.CommandManager;
 import me.notro.sumowarriors.utils.ChatUtils;
-import me.notro.sumowarriors.utils.PlayerUtils;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@RequiredArgsConstructor
-public class ArenaCommand implements CommandExecutor {
+import java.util.List;
+import java.util.Map;
+
+public class ArenaCommand extends CommandManager {
 
     private final SumoWarriors
             plugin;
 
+    public ArenaCommand(@NonNull SumoWarriors plugin) {
+        super("arena");
+        this.plugin = plugin;
+    }
+
     @Override
-    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        if (PlayerUtils.notPlayer(sender))
-            return false;
-
-        Player player = PlayerUtils.getPlayer(sender);
-
-        if (PlayerUtils.notExist(sender, player))
-            return false;
-
-        if (PlayerUtils.noPermission(player, "sumowarriors.setlocation"))
-            return false;
-
-        String syntax = "&7/&carena <list | setlocation <name> <1 | 2>";
-
-        if (args.length == 0) {
-            ChatUtils.sendPrefixedMessage(player, syntax);
-            return false;
-        }
-
-        switch (args[0].toLowerCase()) {
-            case "list" -> {
-                if (args.length != 1) {
-                    ChatUtils.sendPrefixedMessage(player, syntax);
-                    return false;
-                }
-
-                plugin.getArenaManager().displayArenas(player);
-            }
-
-            case "setlocation" -> {
-                if (args.length != 3) {
-                    ChatUtils.sendPrefixedMessage(player, syntax);
-                    return false;
-                }
-
-                plugin.getArenaManager().setArenaLocation(player, args[1], args[2]);
-            }
-        }
+    protected boolean isPlayerCommand() {
         return true;
+    }
+
+    @Override
+    protected String getPermission() {
+        return "sumowarriors.setlocation";
+    }
+
+    @Override
+    protected String getSyntax() {
+        return "&7/&carena <list | setlocation <name> <1 | 2>";
+    }
+
+    @Override
+    protected void executeCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
+        Player player = (Player) sender;
+
+        if (args.length == 1 && args[0].equalsIgnoreCase("list"))
+            plugin.getArenaManager()
+                    .displayArenas(player);
+        else if (args.length == 3 && args[0].equalsIgnoreCase("setlocation")) {
+            String arenaName = args[1];
+            String locationName = args[2];
+
+            plugin.getArenaManager()
+                    .setArenaLocation(player, arenaName, locationName);
+        } else
+            ChatUtils.sendPrefixedMessage(player, getSyntax());
+    }
+
+    @Override
+    protected Map<Integer, List<String>> completions() {
+        return Map.of(1, List.of("list", "setlocation"));
     }
 }

@@ -12,7 +12,8 @@ import org.bukkit.scoreboard.Scoreboard;
 @RequiredArgsConstructor
 public class PlayerJoinListener implements Listener {
 
-    private final SumoWarriors plugin;
+    private final SumoWarriors
+            plugin;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {

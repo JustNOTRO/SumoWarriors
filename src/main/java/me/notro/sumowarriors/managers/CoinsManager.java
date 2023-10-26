@@ -3,9 +3,8 @@ package me.notro.sumowarriors.managers;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.notro.sumowarriors.SumoWarriors;
-import org.bukkit.NamespacedKey;
+import me.notro.sumowarriors.models.DataContainer;
 import org.bukkit.entity.Player;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 @RequiredArgsConstructor
@@ -13,25 +12,37 @@ public class CoinsManager {
 
     private final SumoWarriors
             plugin;
-
+    
     public void addCoins(@NonNull Player player, double amount) {
-        PersistentDataContainer data = player.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "coins");
+        DataContainer container = new DataContainer(plugin, player);
 
-        data.set(key, PersistentDataType.DOUBLE, getCoins(player) + amount);
+        container.getData()
+                .set(
+                        container.getKey(),
+                        PersistentDataType.DOUBLE,
+                        getCoins(player) + amount
+                );
     }
 
     public void removeCoins(@NonNull Player player, double amount) {
-        PersistentDataContainer data = player.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "coins");
+        DataContainer container = new DataContainer(plugin, player);
 
-        data.set(key, PersistentDataType.DOUBLE, getCoins(player) - amount);
+        container.getData()
+                .set(
+                        container.getKey(),
+                        PersistentDataType.DOUBLE,
+                        getCoins(player) - amount
+                );
     }
 
     public double getCoins(@NonNull Player player) {
-        PersistentDataContainer data = player.getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(plugin, "coins");
+        DataContainer container = new DataContainer(plugin, player);
 
-        return data.getOrDefault(key, PersistentDataType.DOUBLE, 0.0D);
+        return container.getData()
+                .getOrDefault(
+                        container.getKey(),
+                        PersistentDataType.DOUBLE,
+                        0.0D
+                );
     }
 }

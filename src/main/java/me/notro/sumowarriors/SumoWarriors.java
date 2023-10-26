@@ -46,7 +46,6 @@ public final class SumoWarriors extends JavaPlugin {
         Objects.requireNonNull(getCommand("duel")).setExecutor(new DuelCommand(this));
         Objects.requireNonNull(getCommand("lobby")).setExecutor(new LobbyCommand(this));
         Objects.requireNonNull(getCommand("setlobby")).setExecutor(new SetLobbyCommand(this));
-        Objects.requireNonNull(getCommand("config")).setExecutor(new ReloadConfigCommand(this));
     }
 
     private void loadListeners() {
@@ -68,6 +67,6 @@ public final class SumoWarriors extends JavaPlugin {
 
     private void loadStringReplaces() {
         this.stringReplacer.addReplacer("%PLAYER%", Player::getName);
-        this.stringReplacer.addReplacer("%COINS%", player -> String.valueOf(coinsManager.getCoins(player)));
+        this.stringReplacer.addReplacer("%COINS%", player -> String.valueOf(this.coinsManager.getCoins(player)));
     }
 }

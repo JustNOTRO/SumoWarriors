@@ -26,7 +26,7 @@ public class PlayerUtils {
         return true;
     }
 
-    public static boolean notExist(@NonNull CommandSender sender, @Nullable Player player) {
+    public static boolean notExist(@Nullable Player player, @NonNull CommandSender sender) {
         if (player != null)
             return false;
 
@@ -40,14 +40,6 @@ public class PlayerUtils {
 
         ChatUtils.sendPrefixedMessage(player, "&cYou cannot send a duel request to yourself&7.");
         return true;
-    }
-
-    @Nullable
-    public static Player getPlayer(@NonNull CommandSender sender) {
-        if (sender instanceof Player player)
-            return player;
-
-        return null;
     }
 
     @Nullable

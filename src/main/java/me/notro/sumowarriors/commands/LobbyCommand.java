@@ -1,46 +1,65 @@
 package me.notro.sumowarriors.commands;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import me.notro.sumowarriors.SumoWarriors;
+import me.notro.sumowarriors.structs.CommandManager;
 import me.notro.sumowarriors.utils.ChatUtils;
-import me.notro.sumowarriors.utils.PlayerUtils;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@RequiredArgsConstructor
-public class LobbyCommand implements CommandExecutor {
+import java.util.List;
+import java.util.Map;
+
+public class LobbyCommand extends CommandManager {
 
     private final SumoWarriors
             plugin;
 
+    public LobbyCommand(@NonNull SumoWarriors plugin) {
+        super("lobby");
+        this.plugin = plugin;
+    }
+
     @Override
-    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        if (PlayerUtils.notPlayer(sender))
-            return false;
+    protected boolean isPlayerCommand() {
+        return true;
+    }
 
-        Player player = PlayerUtils.getPlayer(sender);
+    @Override
+    protected String getPermission() {
+        return "sumowarriors.lobby";
+    }
 
-        if (PlayerUtils.noPermission(player, "sumowarriors.duel"))
-            return false;
+    @Override
+    protected String getSyntax() {
+        return "/lobby";
+    }
 
-        String syntax = "&7/&clobby";
+    @Override
+    protected void executeCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
+        Player player = (Player) sender;
 
-        if (args.length > 0) {
-            ChatUtils.sendPrefixedMessage(player, syntax);
-            return false;
+        if (args.length != 0) {
+            ChatUtils.sendPrefixedMessage(player, getSyntax());
+            return;
         }
 
-        Location lobbyLocation = plugin.getSumoFile().getConfig().getLocation("sumo-warriors.locations.lobby");
+        Location lobbyLocation = plugin.getSumoFile()
+                .getConfig()
+                .getLocation("sumo-warriors.locations.lobby");
+
         if (lobbyLocation == null) {
             ChatUtils.sendPrefixedMessage(player, "&cLobby location is not set&7.");
-            return false;
+            return;
         }
 
         player.teleport(lobbyLocation);
-        return true;
+    }
+
+    @Override
+    protected Map<Integer, List<String>> completions() {
+        return null;
     }
 }

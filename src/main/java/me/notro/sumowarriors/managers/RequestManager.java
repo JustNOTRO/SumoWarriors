@@ -33,34 +33,38 @@ public class RequestManager {
     private Request request;
 
     public void sendRequest(@NonNull Player requester, @NonNull Player target) {
-        if (PlayerUtils.samePlayer(requester, target)) return;
+        if (PlayerUtils.samePlayer(requester, target))
+            return;
 
         Component acceptMessage = sendClickableMessage("&aAccept", "duel accept " + requester.getName());
         Component denyMessage = sendClickableMessage("&cDeny", "duel deny " + requester.getName());
-
-        addRequest(requester, target);
-        ChatUtils.sendPrefixedMessage(requester, "&7You have sent a play request to &e" + target.getName() + "&7.");
-        ChatUtils.sendComponentMessage(target,
-                Component.text(requester.getName())
-                        .color(NamedTextColor.YELLOW)
-                        .append(Component.text(" sent you a request to play ")
-                                .color(NamedTextColor.GRAY)
-                                .append(Component.text("SumoWarriors")
-                                        .color(NamedTextColor.GOLD)
-                                        .append(Component.text("!")
+        Component requestMessage = Component.text(requester.getName())
+                .color(NamedTextColor.YELLOW)
+                .append(Component.text(" sent you a request to play ")
+                        .color(NamedTextColor.GRAY)
+                        .append(Component.text("SumoWarriors")
+                                .color(NamedTextColor.GOLD)
+                                .append(Component.text("!")
+                                        .color(NamedTextColor.GRAY)
+                                        .append(Component.text(" "))
+                                        .append(acceptMessage)
+                                        .append(Component.text(" | ")
                                                 .color(NamedTextColor.GRAY)
-                                                .append(Component.text(" "))
-                                                .append(acceptMessage)
-                                                .append(Component.text(" | ")
-                                                        .color(NamedTextColor.GRAY))
                                                 .append(denyMessage)))));
 
+        addRequest(requester, target);
+        ChatUtils.sendPrefixedMessage(requester,
+                "&7You have sent a play request to &e" + target.getName() + "&7."
+        );
+
+        ChatUtils.sendComponentMessage(target, requestMessage);
         ChatUtils.sendPrefixedMessage(target, "&7You have 60 seconds to accept!");
         startCountdown(requester, target);
     }
 
-    public void startCountdown(@NonNull Player requester, @NonNull Player target) {
+    private void startCountdown(@NonNull Player requester, @NonNull Player target) {
         Request request = plugin.getRequestManager().getRequest();
+
         countdownTask = new BukkitRunnable() {
             int counter = 1;
 
@@ -79,11 +83,17 @@ public class RequestManager {
 
 
     private Component sendClickableMessage(@NonNull String message, @NonNull String command) {
-        Component component = ChatUtils.fixColor(message);
-        return component.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/" + command));
+        Component text = ChatUtils.fixColor(message);
+
+        return text.clickEvent(
+                ClickEvent.clickEvent(
+                        ClickEvent.Action.RUN_COMMAND,
+                        "/" + command
+                )
+        );
     }
 
-    public void addRequest(@NonNull Player requester, @NonNull Player target) {
+    private void addRequest(@NonNull Player requester, @NonNull Player target) {
         request = new Request(requester.getUniqueId(), target.getUniqueId());
         requests.add(request);
     }

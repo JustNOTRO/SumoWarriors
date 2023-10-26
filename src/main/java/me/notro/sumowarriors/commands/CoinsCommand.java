@@ -1,48 +1,69 @@
 package me.notro.sumowarriors.commands;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import me.notro.sumowarriors.SumoWarriors;
+import me.notro.sumowarriors.structs.CommandManager;
 import me.notro.sumowarriors.utils.ChatUtils;
 import me.notro.sumowarriors.utils.PlayerUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@RequiredArgsConstructor
-public class CoinsCommand implements CommandExecutor {
+import java.util.List;
+import java.util.Map;
+
+public class CoinsCommand extends CommandManager {
 
     private final SumoWarriors
             plugin;
 
+    public CoinsCommand(@NonNull SumoWarriors plugin) {
+        super("coins");
+        this.plugin = plugin;
+    }
+
+
     @Override
-    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        if (PlayerUtils.notPlayer(sender))
-            return false;
+    protected boolean isPlayerCommand() {
+        return true;
+    }
 
-        Player player = PlayerUtils.getPlayer(sender);
+    @Override
+    protected String getPermission() {
+        return "sumowarriors.coins";
+    }
 
-        if (PlayerUtils.noPermission(player, "sumowarriors.coins"))
-            return false;
+    @Override
+    protected String getSyntax() {
+        return "&7/&ccoins <player>";
+    }
 
-        String syntax = "&7/&ccoins <player>";
+    @Override
+    protected void executeCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
+        Player player = (Player) sender;
 
+        String coins = String.valueOf(plugin.getCoinsManager().getCoins(player));
         if (args.length == 0) {
-            ChatUtils.sendPrefixedMessage(player, "&7Coins: &6" + plugin.getCoinsManager().getCoins(player));
-            return true;
-        } else if (args.length > 1) {
-            ChatUtils.sendPrefixedMessage(player, syntax);
-            return false;
+            ChatUtils.sendPrefixedMessage(player, "&7Coins: &6" + coins);
+            return;
+        } else if (args.length != 1) {
+            ChatUtils.sendPrefixedMessage(player, getSyntax());
+            return;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        String playerName = args[0];
+        Player target = PlayerUtils.getPlayer(playerName);
 
-        if (PlayerUtils.notExist(player, target))
-            return false;
+        if (PlayerUtils.notExist(target, player))
+            return;
 
-        ChatUtils.sendPrefixedMessage(player, "&e" + target.getName() + "&7's Coins: &6" + plugin.getCoinsManager().getCoins(target));
-        return true;
+        ChatUtils.sendPrefixedMessage(player,
+                "&e" + target.getName() + "&7's Coins: &6" + coins
+        );
+    }
+
+    @Override
+    protected Map<Integer, List<String>> completions() {
+        return null;
     }
 }

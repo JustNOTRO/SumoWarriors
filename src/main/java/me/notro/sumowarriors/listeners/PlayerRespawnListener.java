@@ -2,7 +2,6 @@ package me.notro.sumowarriors.listeners;
 
 import lombok.RequiredArgsConstructor;
 import me.notro.sumowarriors.SumoWarriors;
-import me.notro.sumowarriors.utils.ChatUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

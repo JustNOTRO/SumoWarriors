@@ -3,7 +3,6 @@ package me.notro.sumowarriors.utils;
 import lombok.NonNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 public class ChatUtils {
@@ -22,10 +21,6 @@ public class ChatUtils {
 
     public static void sendPrefixedMessage(@NonNull CommandSender sender, @NonNull String message) {
         sender.sendMessage(prefix.append(fixColor(message)));
-    }
-
-    public static void sendFormattedMessage(@NonNull CommandSender sender, @NonNull String message) {
-        sender.sendMessage(fixColor(message));
     }
 
     public static void sendComponentMessage(@NonNull CommandSender sender, @NonNull Component message) {

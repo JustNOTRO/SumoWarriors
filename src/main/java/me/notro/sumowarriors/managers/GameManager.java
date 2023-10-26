@@ -5,6 +5,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.notro.sumowarriors.SumoWarriors;
 import me.notro.sumowarriors.models.Arena;
+import me.notro.sumowarriors.models.DataContainer;
 import me.notro.sumowarriors.models.Game;
 import me.notro.sumowarriors.models.Request;
 import me.notro.sumowarriors.utils.ChatUtils;
@@ -12,7 +13,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -38,16 +38,33 @@ public class GameManager {
 
     public void startGame(@NonNull Player requester, @NonNull Player target) {
         Request request = plugin.getRequestManager().getRequest();
-        plugin.getRequestManager().removeRequest(request);
-        plugin.getRequestManager().getCountdownTask().cancel();
+
+        plugin.getRequestManager()
+                .removeRequest(request);
+
+        plugin.getRequestManager()
+                .getCountdownTask()
+                .cancel();
 
         startTask = new BukkitRunnable() {
             int counter = 3;
+
             @Override
             public void run() {
                 if (counter >= 1) {
-                    requester.showTitle(Title.title(Component.text("Starting in: " + counter), Component.text("")));
-                    target.showTitle(Title.title(Component.text("Starting in: " + counter), Component.text("")));
+                    requester.showTitle(
+                            Title.title(
+                                    Component.text("Starting in: " + counter),
+                                    Component.text("")
+                            )
+                    );
+
+                    target.showTitle(
+                            Title.title(
+                                    Component.text("Starting in: " + counter),
+                                    Component.text("")
+                            )
+                    );
                     counter--;
                 } else {
                     cancel();
@@ -60,10 +77,17 @@ public class GameManager {
 
     public void sendToGame(@NonNull Player requester, @NonNull Player target) {
         String arenaName = plugin.getArenaManager().getArenaName();
-
         plugin.getArenaManager().addArena(arenaName);
+
+        World world = Bukkit.getWorld(arenaName);
         Location firstLocation = plugin.getArenaManager().getFirstLocation(arenaName);
         Location secondLocation = plugin.getArenaManager().getSecondLocation(arenaName);
+
+        if (world == null) {
+            removeGame(game);
+            ChatUtils.sendPrefixedMessage(requester, "&cAn error occurred while trying send to game, please contact an administrator&7.");
+            return;
+        }
 
         if (firstLocation == null || secondLocation == null) {
             removeGame(game);
@@ -71,42 +95,62 @@ public class GameManager {
             return;
         }
 
-        if (!firstLocation.getWorld().equals(requester.getWorld()) || !secondLocation.getWorld().equals(target.getWorld())) {
-            firstLocation.setWorld(requester.getWorld());
-            secondLocation.setWorld(target.getWorld());
-        }
+        firstLocation.setWorld(world);
+        secondLocation.setWorld(world);
 
-        requester.setGameMode(GameMode.ADVENTURE);
-        target.setGameMode(GameMode.ADVENTURE);
         requester.teleport(firstLocation);
         target.teleport(secondLocation);
     }
 
     public void endGame(@NonNull Player requester, @NonNull Player target) {
-        Arena arena = plugin.getArenaManager().getArena(plugin.getArenaManager().getArenaName());
+        String arenaName = plugin.getArenaManager().getArenaName();
+        Arena arena = plugin.getArenaManager().getArena(arenaName);
         if (arena == null || !plugin.getArenaManager().exists(arena)) return;
 
         if (inGame(game) && requester.isInWater()) {
-            plugin.getCoinsManager().addCoins(target, 20.0D);
+            plugin.getArenaManager()
+                    .removeArena(arena);
+
             removeGame(game);
             sendToLobby(requester, target);
-            target.showTitle(Title.title(Component.text("VICTORY ROYAL").color(NamedTextColor.GOLD), Component.text("")));
+
+            target.showTitle(
+                    Title.title(
+                            Component.text("VICTORY ROYAL")
+                                    .color(NamedTextColor.GOLD),
+                            Component.text("")
+                    )
+            );
             ChatUtils.sendPrefixedMessage(target, "&7You have received 20.0 coins for playing &eSumo-Warriors!");
-            return;
+        } else if (inGame(game) && target.isInWater()) {
+            plugin.getArenaManager()
+                    .removeArena(arena);
+
+            removeGame(game);
+            sendToLobby(requester, target);
+
+            requester.showTitle(
+                    Title.title(
+                            Component.text("VICTORY ROYAL")
+                                    .color(NamedTextColor.GOLD),
+                            Component.text("")
+                    )
+            );
+            ChatUtils.sendPrefixedMessage(requester, "&7You have received 20.0 coins for playing &eSumo-Warriors!");
         }
 
+        plugin.getCoinsManager().addCoins(target, 20.0D);
         plugin.getCoinsManager().addCoins(requester, 20.0D);
-        removeGame(game);
-        sendToLobby(requester, target);
-        requester.showTitle(Title.title(Component.text("VICTORY ROYAL").color(NamedTextColor.GOLD), Component.text("")));
-        ChatUtils.sendPrefixedMessage(requester, "&7You have received 20.0 coins for playing &eSumo-Warriors!");
     }
 
     public void sendToLobby(@NonNull Player requester, @NonNull Player target) {
         ChatUtils.sendPrefixedMessage(requester, "&aReturning to lobby...");
         ChatUtils.sendPrefixedMessage(target, "&aReturning to lobby...");
 
-        Location lobbyLocation = plugin.getSumoFile().getConfig().getLocation("sumo-warriors.locations.lobby");
+        Location lobbyLocation = plugin.getSumoFile()
+                .getConfig()
+                .getLocation("sumo-warriors.locations.lobby");
+
         if (lobbyLocation == null) {
             ChatUtils.sendPrefixedMessage(requester, "&cAn error occurred while trying send to lobby, please contact an administrator&7.");
             return;
@@ -114,9 +158,11 @@ public class GameManager {
 
         new BukkitRunnable() {
             int counter = 1;
+
             @Override
             public void run() {
-                if (counter <= 5) counter++;
+                if (counter <= 5)
+                    counter++;
                 else {
                     cancel();
                     Game game = getGame();

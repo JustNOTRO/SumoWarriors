@@ -2,6 +2,7 @@ package me.notro.sumowarriors.structs;
 
 import lombok.NonNull;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ public class StringReplacer {
 
 
     public void addReplacer(@NonNull String key, @NonNull Function<Player, String> replacer) {
-        replaces.put(key, replacer);
+        this.replaces.put(key, replacer);
     }
 
     public void replace(@NonNull Player player, @NonNull String text) {
@@ -39,6 +40,15 @@ public class StringReplacer {
         return key;
     }
 
+    @Nullable
+    public String getKey(@NonNull String text) {
+        for (var entry : this.replaces.keySet()) {
+            if (entry.contains(text))
+                return entry;
+        }
+        return null;
+    }
+
     @NonNull
     public List<String> getReplaces() {
         List<String> list = new ArrayList<>();
@@ -49,8 +59,8 @@ public class StringReplacer {
     }
 
     public boolean containsKey(@NonNull String key) {
-        for (var entry : this.replaces.entrySet()) {
-            if (key.contains(entry.getKey()))
+        for (var entry : this.replaces.keySet()) {
+            if (key.contains(entry))
                 return true;
         }
         return false;
